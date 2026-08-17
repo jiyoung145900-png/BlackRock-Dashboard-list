@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BANADA 입금계좌 안내 생성기</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+KR:wght@300;400;500;700;900&family=Noto+Serif+KR:wght@400;600;700&family=Playfair+Display:ital,wght@0,700;0,800;1,700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Noto Sans KR', 'Inter', sans-serif;
+            background: #0A0508;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            gap: 50px;
+            padding: 40px 20px;
+            flex-wrap: wrap;
+        }
+
+        /* ============ CONTROLS ============ */
+        .controls {
+            width: 100%;
+            max-width: 400px;
+            background: rgba(255,255,255,0.97);
+            border-radius: 24px;
+            padding: 36px 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.7);
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .controls-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #eee;
+        }
+        .controls-header .icon {
+            width: 44px; height: 44px;
+            background: linear-gradient(135deg, #D4AF37 0%, #B8860B 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+        }
+        .controls-header .text h2 {
+            font-size: 18px;
+            font-weight: 800;
+            color: #111;
+            letter-spacing: -0.5px;
+        }
+        .controls-header .text p {
+            font-size: 12px;
+            color: #999;
+            margin-top: 2px;
+        }
+
+        .section-label {
+            font-size: 11px;
+            font-weight: 700;
+            color: #B8860B;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: -8px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .input-group label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #444;
+        }
+        .input-group input,
+        .input-group select,
+        .input-group textarea {
+            padding: 13px 16px;
+            border: 1.5px solid #e0e0e0;
+            border-radius: 12px;
+            font-family: inherit;
+            font-size: 15px;
+            font-weight: 500;
+            background: #fafafa;
+            transition: all 0.25s;
+            color: #222;
+        }
+        .input-group input:focus,
+        .input-group select:focus,
+        .input-group textarea:focus {
+            border-color: #D4AF37;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(212,175,55,0.12);
+            background: #fff;
+        }
+        .input-group textarea {
+            resize: none;
+            height: 52px;
+            font-size: 13px;
+        }
+        .input-group select {
+            cursor: pointer;
+            -webkit-appearance: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 14px center;
+            padding-right: 36px;
+        }
+
+        /* 금액 입력 특별 스타일 */
+        .amount-wrapper {
+            position: relative;
+        }
+        .amount-wrapper input {
+            padding-right: 36px;
+            font-weight: 700;
+            font-size: 16px;
+            letter-spacing: 0.5px;
+        }
+        .amount-wrapper .won-symbol {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 14px;
+            font-weight: 700;
+            color: #999;
+        }
+
+        .divider {
+            height: 1px;
+            background: #eee;
+        }
+
+        /* 테마 선택 */
+        .theme-row {
+            display: flex;
+            gap: 10px;
+        }
+        .theme-btn {
+            width: 48px; height: 48px;
+            border-radius: 50%;
+            border: 3px solid transparent;
+            cursor: pointer;
+            transition: all 0.25s;
+            position: relative;
+            overflow: hidden;
+        }
+        .theme-btn:hover { transform: scale(1.1); }
+        .theme-btn.active {
+            border-color: #D4AF37;
+            box-shadow: 0 0 0 3px rgba(212,175,55,0.25);
+        }
+        .theme-btn.active::after {
+            content: '✓';
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: 900;
+            color: white;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+        }
+        .theme-rose { background: linear-gradient(135deg, #FFE4EC, #FFC0CB, #FFB6C1); }
+        .theme-sky { background: linear-gradient(135deg, #E0F0FF, #B8D8F8, #A8CCE8); }
+        .theme-dark { background: linear-gradient(135deg, #2a2a2a, #1a1a1a, #111); }
+        .theme-gold { background: linear-gradient(135deg, #FFF8E7, #F5E6C8, #E8D5A8); }
+
+        .download-btn {
+            background: linear-gradient(135deg, #D4AF37 0%, #B8860B 50%, #D4AF37 100%);
+            background-size: 200% 100%;
+            color: #fff;
+            border: none;
+            padding: 18px;
+            border-radius: 14px;
+            font-size: 16px;
+            font-weight: 800;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 8px 24px rgba(212,175,55,0.35);
+            letter-spacing: -0.3px;
+        }
+        .download-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px rgba(212,175,55,0.45);
+            background-position: 100% 0;
+        }
+        .download-btn:active { transform: translateY(0); }
+
+        /* ============ CARD PREVIEW ============ */
+        .preview-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+            position: sticky;
+            top: 40px;
+        }
+        .preview-label {
+            font-size: 13px;
+            color: #666;
+            background: rgba(255,255,255,0.08);
+            padding: 6px 16px;
+            border-radius: 20px;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255,255,255,0.06);
+        }
+
+        /* 실제 카드 */
+        .card {
+            width: 480px;
+            min-height: 720px;
+            border-radius: 0;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 테마별 배경 */
+        .card[data-theme="rose"] {
+            background: linear-gradient(180deg, #FFF5F8 0%, #FFE8EE 30%, #FFDCE5 60%, #FFD0DA 100%);
+        }
+        .card[data-theme="sky"] {
+            background: linear-gradient(180deg, #F0F7FF 0%, #E0EEFF 30%, #D0E4FF 60%, #C0D8FF 100%);
+        }
+        .card[data-theme="dark"] {
+            background: linear-gradient(180deg, #1a1a1a 0%, #111 30%, #0a0a0a 60%, #050505 100%);
+        }
+        .card[data-theme="gold"] {
+            background: linear-gradient(180deg, #FFFDF5 0%, #FFF8E7 30%, #FFF0D0 60%, #FFE8B8 100%);
+        }
+
+        /* 카드 상단 장식 패턴 */
+        .card-deco {
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 200px;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .card[data-theme="rose"] .card-deco {
+            background: radial-gradient(ellipse at 50% -20%, rgba(212,175,55,0.08) 0%, transparent 70%);
+        }
+        .card[data-theme="sky"] .card-deco {
+            background: radial-gradient(ellipse at 50% -20%, rgba(100,150,220,0.08) 0%, transparent 70%);
+        }
+        .card[data-theme="dark"] .card-deco {
+            background: radial-gradient(ellipse at 50% -20%, rgba(212,175,55,0.12) 0%, transparent 70%);
+        }
+        .card[data-theme="gold"] .card-deco {
+            background: radial-gradient(ellipse at 50% -20%, rgba(212,175,55,0.1) 0%, transparent 70%);
+        }
+
+        .card-content {
+            position: relative;
+            z-index: 1;
+            padding: 48px 36px 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
+        }
+
+        /* 로고 영역 */
+        .card-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+        .card-logo .b-mark {
+            font-family: 'Playfair Display', serif;
+            font-weight: 800;
+            font-size: 28px;
+            font-style: italic;
+        }
+        .card-logo .brand-name {
+            font-family: 'Inter', sans-serif;
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: 5px;
+        }
+
+        .card-title {
+            font-family: 'Noto Serif KR', serif;
+            font-size: 32px;
+            font-weight: 700;
+            margin: 12px 0 36px;
+            letter-spacing: -1px;
+        }
+
+        /* 은행 로고 원형 */
+        .bank-circle {
+            width: 130px; height: 130px;
+            border-radius: 50%;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 36px;
+            position: relative;
+        }
+        .card[data-theme="dark"] .bank-circle {
+            background: rgba(255,255,255,0.95);
+        }
+        .bank-circle::before {
+            content: '';
+            position: absolute;
+            inset: -4px;
+            border-radius: 50%;
+            border: 1.5px solid rgba(212,175,55,0.25);
+        }
+        .bank-logo-text {
+            font-size: 18px;
+            font-weight: 800;
+            color: #333;
+            text-align: center;
+            line-height: 1.3;
+        }
+
+        /* 금액 표시 (새로 추가) */
+        .amount-display {
+            width: 100%;
+            text-align: center;
+            margin-bottom: 28px;
+            padding: 20px 0;
+            position: relative;
+        }
+        .amount-display::before,
+        .amount-display::after {
+            content: '';
+            position: absolute;
+            left: 20%; right: 20%;
+            height: 1px;
+        }
+        .amount-display::before { top: 0; }
+        .amount-display::after { bottom: 0; }
+
+        .card[data-theme="rose"] .amount-display::before,
+        .card[data-theme="rose"] .amount-display::after { background: rgba(180,100,120,0.15); }
+        .card[data-theme="sky"] .amount-display::before,
+        .card[data-theme="sky"] .amount-display::after { background: rgba(100,140,200,0.15); }
+        .card[data-theme="dark"] .amount-display::before,
+        .card[data-theme="dark"] .amount-display::after { background: rgba(212,175,55,0.2); }
+        .card[data-theme="gold"] .amount-display::before,
+        .card[data-theme="gold"] .amount-display::after { background: rgba(180,130,60,0.15); }
+
+        .amount-label {
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+        .amount-value {
+            font-family: 'Inter', sans-serif;
+            font-size: 36px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+        .amount-value .won {
+            font-size: 24px;
+            font-weight: 600;
+            margin-left: 2px;
+        }
+
+        /* 정보 카드 */
+        .info-card {
+            width: 100%;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+        .card[data-theme="rose"] .info-card {
+            background: rgba(255,255,255,0.65);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.5);
+            box-shadow: 0 4px 20px rgba(180,100,120,0.08);
+        }
+        .card[data-theme="sky"] .info-card {
+            background: rgba(255,255,255,0.65);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.5);
+            box-shadow: 0 4px 20px rgba(100,140,200,0.08);
+        }
+        .card[data-theme="dark"] .info-card {
+            background: rgba(255,255,255,0.06);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.08);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+        .card[data-theme="gold"] .info-card {
+            background: rgba(255,255,255,0.55);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.5);
+            box-shadow: 0 4px 20px rgba(180,130,60,0.08);
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 0;
+        }
+        .info-row + .info-row {
+            border-top: 1px solid rgba(128,128,128,0.1);
+        }
+        .info-row .label {
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: -0.2px;
+        }
+        .info-row .value {
+            font-size: 15px;
+            font-weight: 600;
+            text-align: right;
+        }
+
+        /* 계좌번호 행 — 특별 스타일 */
+        .info-row.account-row .value {
+            font-family: 'Inter', sans-serif;
+            font-size: 20px;
+            font-weight: 800;
+            letter-spacing: 1px;
+        }
+
+        /* 복사 뱃지 */
+        .copy-badge {
+            display: inline-block;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 6px;
+            margin-left: 8px;
+            letter-spacing: 0.5px;
+            vertical-align: middle;
+        }
+        .card[data-theme="rose"] .copy-badge {
+            background: rgba(212,100,120,0.12);
+            color: #C0607A;
+        }
+        .card[data-theme="sky"] .copy-badge {
+            background: rgba(80,130,200,0.12);
+            color: #4080C0;
+        }
+        .card[data-theme="dark"] .copy-badge {
+            background: rgba(212,175,55,0.2);
+            color: #D4AF37;
+        }
+        .card[data-theme="gold"] .copy-badge {
+            background: rgba(180,130,60,0.15);
+            color: #B07820;
+        }
+
+        /* 하단 안내 문구 */
+        .card-notice {
+            width: 100%;
+            text-align: center;
+            font-size: 12px;
+            font-weight: 500;
+            line-height: 1.6;
+            margin-top: auto;
+            padding-top: 16px;
+        }
+
+        /* 테마별 텍스트 색상 */
+        .card[data-theme="rose"] { color: #5A2D3A; }
+        .card[data-theme="rose"] .card-logo .b-mark { color: #C07A50; }
+        .card[data-theme="rose"] .card-logo .brand-name { color: #8B5E3C; }
+        .card[data-theme="rose"] .card-title { color: #4A1E2A; }
+        .card[data-theme="rose"] .amount-label { color: #B07A88; }
+        .card[data-theme="rose"] .amount-value { color: #5A2D3A; }
+        .card[data-theme="rose"] .info-row .label { color: #B07A88; }
+        .card[data-theme="rose"] .info-row .value { color: #3A1520; }
+        .card[data-theme="rose"] .card-notice { color: #B08898; }
+
+        .card[data-theme="sky"] { color: #2A3D5A; }
+        .card[data-theme="sky"] .card-logo .b-mark { color: #5A88B8; }
+        .card[data-theme="sky"] .card-logo .brand-name { color: #3A6898; }
+        .card[data-theme="sky"] .card-title { color: #1A2D4A; }
+        .card[data-theme="sky"] .amount-label { color: #7A9ABB; }
+        .card[data-theme="sky"] .amount-value { color: #2A3D5A; }
+        .card[data-theme="sky"] .info-row .label { color: #7A9ABB; }
+        .card[data-theme="sky"] .info-row .value { color: #15253A; }
+        .card[data-theme="sky"] .card-notice { color: #8AAABB; }
+
+        .card[data-theme="dark"] { color: #E8E0D8; }
+        .card[data-theme="dark"] .card-logo .b-mark { color: #D4AF37; }
+        .card[data-theme="dark"] .card-logo .brand-name { color: #D4AF37; }
+        .card[data-theme="dark"] .card-title { color: #FFFFFF; }
+        .card[data-theme="dark"] .amount-label { color: #D4AF37; }
+        .card[data-theme="dark"] .amount-value { color: #FFFFFF; }
+        .card[data-theme="dark"] .info-row .label { color: #D4AF37; }
+        .card[data-theme="dark"] .info-row .value { color: #F5F0E8; }
+        .card[data-theme="dark"] .card-notice { color: rgba(255,255,255,0.4); }
+
+        .card[data-theme="gold"] { color: #5A4520; }
+        .card[data-theme="gold"] .card-logo .b-mark { color: #B8860B; }
+        .card[data-theme="gold"] .card-logo .brand-name { color: #8B6914; }
+        .card[data-theme="gold"] .card-title { color: #3A2D10; }
+        .card[data-theme="gold"] .amount-label { color: #B89850; }
+        .card[data-theme="gold"] .amount-value { color: #3A2D10; }
+        .card[data-theme="gold"] .info-row .label { color: #B89850; }
+        .card[data-theme="gold"] .info-row .value { color: #2A1E08; }
+        .card[data-theme="gold"] .card-notice { color: #B8A878; }
+
+        /* 하단 워터마크 */
+        .card-watermark {
+            position: absolute;
+            bottom: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-family: 'Inter', sans-serif;
+            font-size: 9px;
+            font-weight: 500;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            opacity: 0.2;
+        }
+
+        /* ============ RESPONSIVE ============ */
+        @media (max-width: 960px) {
+            body { gap: 30px; padding: 20px 12px; }
+            .card { width: 380px; min-height: 600px; }
+            .card-title { font-size: 26px; }
+            .amount-value { font-size: 28px; }
+            .info-row.account-row .value { font-size: 17px; }
+        }
+        @media (max-width: 500px) {
+            .card { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ========== CONTROLS ========== -->
+<div class="controls">
+    <div class="controls-header">
+        <div class="icon">💳</div>
+        <div class="text">
+            <h2>입금계좌 안내 생성기</h2>
+            <p>정보를 입력하면 고화질 이미지로 저장됩니다</p>
+        </div>
+    </div>
+
+    <span class="section-label">은행 정보</span>
+
+    <div class="input-group">
+        <label>은행명</label>
+        <select id="bank-select">
+            <option value="하나은행">하나은행</option>
+            <option value="국민은행">국민은행</option>
+            <option value="신한은행">신한은행</option>
+            <option value="우리은행">우리은행</option>
+            <option value="카카오뱅크">카카오뱅크</option>
+            <option value="토스뱅크">토스뱅크</option>
+            <option value="기업은행">기업은행</option>
+            <option value="농협은행">농협은행</option>
+            <option value="SC제일은행">SC제일은행</option>
+            <option value="씨티은행">씨티은행</option>
+            <option value="케이뱅크">케이뱅크</option>
+        </select>
+    </div>
+
+    <div class="input-group">
+        <label>계좌번호</label>
+        <input type="text" id="account-input" value="449-910467-27707" placeholder="예: 123-456789-12345">
+    </div>
+
+    <div class="input-group">
+        <label>예금주</label>
+        <input type="text" id="holder-input" value="차상훈" placeholder="예: 홍길동">
+    </div>
+
+    <div class="divider"></div>
+    <span class="section-label">결제 금액</span>
+
+    <div class="input-group">
+        <label>입금 금액 (비워두면 표시 안 함)</label>
+        <div class="amount-wrapper">
+            <input type="text" id="amount-input" value="" placeholder="예: 500,000">
+            <span class="won-symbol">원</span>
+        </div>
+    </div>
+
+    <div class="divider"></div>
+    <span class="section-label">하단 안내 문구</span>
+
+    <div class="input-group">
+        <textarea id="notice-input" placeholder="안내 문구 입력">※ 입금 후에는 이체내역(스크린샷)을 꼭 캡쳐해서 보여주세요.</textarea>
+    </div>
+
+    <div class="divider"></div>
+    <span class="section-label">배경 테마</span>
+
+    <div class="theme-row">
+        <div class="theme-btn theme-rose active" data-theme="rose" onclick="setTheme('rose', this)"></div>
+        <div class="theme-btn theme-sky" data-theme="sky" onclick="setTheme('sky', this)"></div>
+        <div class="theme-btn theme-dark" data-theme="dark" onclick="setTheme('dark', this)"></div>
+        <div class="theme-btn theme-gold" data-theme="gold" onclick="setTheme('gold', this)"></div>
+    </div>
+
+    <button class="download-btn" id="download-btn" onclick="downloadCard()">
+        이미지로 저장하기
+    </button>
+</div>
+
+<!-- ========== CARD PREVIEW ========== -->
+<div class="preview-wrapper">
+    <div class="preview-label">🟢 실시간 미리보기 · 자동 저장</div>
+
+    <div class="card" id="card-canvas" data-theme="rose">
+        <div class="card-deco"></div>
+
+        <div class="card-content">
+            <!-- 로고 -->
+            <div class="card-logo">
+                <span class="b-mark">B</span>
+                <span class="brand-name">BANADA</span>
+            </div>
+
+            <!-- 타이틀 -->
+            <div class="card-title">입금계좌 안내</div>
+
+            <!-- 은행 로고 원 -->
+            <div class="bank-circle">
+                <div class="bank-logo-text" id="card-bank-logo">하나은행</div>
+            </div>
+
+            <!-- 금액 표시 -->
+            <div class="amount-display" id="amount-section" style="display:none;">
+                <div class="amount-label">입금 금액</div>
+                <div class="amount-value">
+                    <span id="card-amount-value">500,000</span><span class="won">원</span>
+                </div>
+            </div>
+
+            <!-- 정보 카드 -->
+            <div class="info-card">
+                <div class="info-row">
+                    <span class="label">은행명</span>
+                    <span class="value" id="card-bank-name">하나은행</span>
+                </div>
+                <div class="info-row account-row">
+                    <span class="label">계좌번호</span>
+                    <span class="value">
+                        <span id="card-account">449-910467-27707</span>
+                        <span class="copy-badge">계좌만 복사</span>
+                    </span>
+                </div>
+                <div class="info-row">
+                    <span class="label">예금주</span>
+                    <span class="value" id="card-holder">차상훈</span>
+                </div>
+            </div>
+
+            <!-- 하단 안내 -->
+            <div class="card-notice" id="card-notice">※ 입금 후에는 이체내역(스크린샷)을 꼭 캡쳐해서 보여주세요.</div>
+        </div>
+
+        <div class="card-watermark">BANADAMEET.COM</div>
+    </div>
+</div>
+
+<script>
+    // DOM
+    const bankSelect = document.getElementById('bank-select');
+    const accountInput = document.getElementById('account-input');
+    const holderInput = document.getElementById('holder-input');
+    const amountInput = document.getElementById('amount-input');
+    const noticeInput = document.getElementById('notice-input');
+
+    const cardBankLogo = document.getElementById('card-bank-logo');
+    const cardBankName = document.getElementById('card-bank-name');
+    const cardAccount = document.getElementById('card-account');
+    const cardHolder = document.getElementById('card-holder');
+    const cardAmountValue = document.getElementById('card-amount-value');
+    const amountSection = document.getElementById('amount-section');
+    const cardNotice = document.getElementById('card-notice');
+    const card = document.getElementById('card-canvas');
+
+    const STORAGE_KEY = 'banada_deposit_guide_v2';
+
+    // 은행 약어 매핑
+    const bankShort = {
+        '하나은행': '하나은행',
+        '국민은행': 'KB\n국민은행',
+        '신한은행': '신한은행',
+        '우리은행': '우리은행',
+        '카카오뱅크': 'kakao\nbank',
+        '토스뱅크': 'toss\nbank',
+        '기업은행': 'IBK\n기업은행',
+        '농협은행': 'NH\n농협은행',
+        'SC제일은행': 'SC제일\n은행',
+        '씨티은행': 'Citi\n은행',
+        '케이뱅크': 'K bank',
+    };
+
+    // 실시간 업데이트
+    function updateCard() {
+        const bank = bankSelect.value;
+        cardBankLogo.innerText = bankShort[bank] || bank;
+        cardBankName.innerText = bank;
+        cardAccount.innerText = accountInput.value;
+        cardHolder.innerText = holderInput.value;
+        cardNotice.innerText = noticeInput.value;
+
+        // 금액
+        const raw = amountInput.value.replace(/[^0-9]/g, '');
+        if (raw) {
+            const formatted = Number(raw).toLocaleString('ko-KR');
+            amountInput.value = formatted;
+            cardAmountValue.innerText = formatted;
+            amountSection.style.display = 'block';
+        } else {
+            amountSection.style.display = 'none';
+        }
+
+        saveState();
+    }
+
+    bankSelect.addEventListener('change', updateCard);
+    accountInput.addEventListener('input', updateCard);
+    holderInput.addEventListener('input', updateCard);
+    amountInput.addEventListener('input', updateCard);
+    noticeInput.addEventListener('input', updateCard);
+
+    // 테마
+    let currentTheme = 'rose';
+    function setTheme(theme, el) {
+        currentTheme = theme;
+        card.setAttribute('data-theme', theme);
+        document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active'));
+        if (el) el.classList.add('active');
+        saveState();
+    }
+
+    // localStorage
+    function saveState() {
+        const data = {
+            bank: bankSelect.value,
+            account: accountInput.value,
+            holder: holderInput.value,
+            amount: amountInput.value,
+            notice: noticeInput.value,
+            theme: currentTheme,
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    }
+
+    function loadState() {
+        try {
+            const data = JSON.parse(localStorage.getItem(STORAGE_KEY));
+            if (!data) return;
+            if (data.bank) bankSelect.value = data.bank;
+            if (data.account) accountInput.value = data.account;
+            if (data.holder) holderInput.value = data.holder;
+            if (data.amount) amountInput.value = data.amount;
+            if (data.notice) noticeInput.value = data.notice;
+            if (data.theme) {
+                const btn = document.querySelector(`.theme-btn[data-theme="${data.theme}"]`);
+                setTheme(data.theme, btn);
+            }
+            updateCard();
+        } catch(e) {}
+    }
+
+    window.onload = loadState;
+
+    // 다운로드
+    function downloadCard() {
+        const btn = document.getElementById('download-btn');
+        btn.innerText = '생성 중...';
+        btn.style.opacity = '0.6';
+        btn.disabled = true;
+
+        html2canvas(card, {
+            scale: 3,
+            useCORS: true,
+            backgroundColor: null,
+            logging: false,
+        }).then(canvas => {
+            const link = document.createElement('a');
+            link.download = `BANADA_입금안내_${holderInput.value || 'card'}.png`;
+            link.href = canvas.toDataURL('image/png', 1.0);
+            link.click();
+
+            btn.innerText = '이미지로 저장하기';
+            btn.style.opacity = '1';
+            btn.disabled = false;
+        });
+    }
+
+    // 초기 렌더
+    updateCard();
+</script>
+</body>
+</html>
